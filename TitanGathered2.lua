@@ -21,6 +21,7 @@ tg.www = "www.rrsoft.cz";
 tg.boardCount = 5;
 tg.showZero = 0;
 tg.menuitem = "";
+tg.BPQNGameTooltipHooked = 0;
 --  Get data from the TOC file.
 tg.version = tostring(GetAddOnMetadata(tg.addon, "Version")) or "Unknown"
 tg.author = GetAddOnMetadata(tg.addon, "Author") or "Unknown"
@@ -354,7 +355,13 @@ function tg.Button_OnLoad(self)
             end
         end
     end
-    
+
+
+    hooksecurefunc("GameTooltip_SetDefaultAnchor", function(self, parent)
+        -- local uiScale, x, y = parent:GetEffectiveScale(), GetCursorPosition()
+        self:SetOwner(parent, "ANCHOR_CURSOR_RIGHT", 30, -112)
+    end)
+
     function ScriptHooks:OnShow()
         if(TitanGetVar(tg.id, "ShowInfoTooltip"))then return end
         
@@ -409,6 +416,8 @@ function tg.Button_OnLoad(self)
 
     function tg:HookTooltipEvents()
         for scriptName, hookFunc in next, ScriptHooks do
+            dump(scriptName);
+            dump(hookFunc);
             gtt:HookScript(scriptName, hookFunc);
         end
     end
