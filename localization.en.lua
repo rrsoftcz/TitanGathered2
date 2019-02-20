@@ -71,6 +71,7 @@ TG_LOCAL_SKILL_ENCH_NAME = "Enchanting";
 TITAN_ORES_LOCAL_PERCENT = 0;
 TG_LOCAL_SHOW_TOOLTIP = "Enable informations in tooltip";
 TG_L_SHOW_STACKS_IN_TOOLTIP = "Show stack info in tooltips";
+TG_L_CHANGE_TOOLTIP_ANCHOR = "Change Tooltip Anchor to Mouse";
 TG_L_ENABLE_TOOLTIP = "Tooltip";
 TG_LOCAL_DEBUG_MODE = "Debug mode";
 
