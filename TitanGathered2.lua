@@ -102,11 +102,11 @@ function tg.Button_OnLoad(self)
         self:RegisterEvent("PLAYER_ENTERING_WORLD");
         self:RegisterEvent("PLAYER_LEAVING_WORLD");
         self:RegisterEvent("LOOT_OPENED");
-        self:RegisterEvent("BANKFRAME_OPENED");
-        self:RegisterEvent("BANKFRAME_CLOSED");
+        -- self:RegisterEvent("BANKFRAME_OPENED");
+        -- self:RegisterEvent("BANKFRAME_CLOSED");
         self:RegisterEvent("TRADE_SKILL_SHOW");
         self:RegisterEvent("SKILL_LINES_CHANGED");
-        self:RegisterEvent("CURSOR_UPDATE");
+        -- self:RegisterEvent("CURSOR_UPDATE");
         tg:HookTooltipEvents();
     end
 
@@ -216,8 +216,10 @@ function tg.Button_OnLoad(self)
     -- Create tooltip label --
     --------------------------
     function getGatheredTooltipInfo(item, color)
-        local v_count = TitanGathered2_CountItem(item.tag);
-        local b_count = TitanGathered2_CountItemStoredInBank(item.tag);
+        -- local v_count = TitanGathered2_CountItem(item.tag);
+        local v_count = GetItemCount(item.tag);
+        -- local b_count = TitanGathered2_CountItemStoredInBank(item.tag);
+        local b_count = (GetItemCount(item.tag, true) - v_count);
         local nextText = "";
 
         if (TitanGetVar(tg.id, "ShowZerro")) then
@@ -252,22 +254,6 @@ function tg.Button_OnLoad(self)
         return color;
     end
 
-    -- Item count function
-    function TitanGathered2_CountItem(searchedItemID)
-        local i_count = 0;
-
-        for b = 0, 4 do
-            local nbslots = GetContainerNumSlots(b);
-            for s = 0, nbslots do
-                local _, itemCount, _, _, _, _, _, _, _, bankItemID = GetContainerItemInfo(b, s);
-
-                if(tonumber(searchedItemID) == tonumber(bankItemID)) then
-                    i_count = i_count + itemCount;
-                end
-            end
-        end
-        return i_count;
-    end
 
     -- show tooltip row
     function TitanGathered2_ShowTooltipRow(v_color, e_name, v_count, b_count)
@@ -280,27 +266,6 @@ function tg.Button_OnLoad(self)
         end
 
         return t_row;
-    end
-
-    -- bank item count function
-    function TitanGathered2_CountItemStoredInBank(item_id)
-
-        local dbb = TitanGetVar(tg.id, "bankHistory");
-        local nbslots, i, e;
-        local i_count = 0;
-
-        for i, e in pairs(dbb) do
-
-            local _, _, color, id, name = string.find(e.name, "|c(%x+)|Hitem:(%d+):[%d:]+|h%[(.-)%]|h|r");
-
-            if (type(e) == "table") then
-
-                if (id == item_id) then
-                    i_count = i_count + e.value;
-                end
-            end
-        end
-        return i_count;
     end
 
     -- Event
@@ -316,12 +281,12 @@ function tg.Button_OnLoad(self)
         if (event == "LOOT_OPENED") then
             TitanGathered2_loot();
         end
-        if (event == "BANKFRAME_OPENED") then
-            TitanGathered2_bankOpen();
-        end
-        if (event == "BANKFRAME_CLOSED") then
-            TitanGathered2_bankClose();
-        end
+        -- if (event == "BANKFRAME_OPENED") then
+        --     TitanGathered2_bankOpen();
+        -- end
+        -- if (event == "BANKFRAME_CLOSED") then
+        --     TitanGathered2_bankClose();
+        -- end
         TitanPanelButton_UpdateButton(tg.id);
         tg.showZero = TitanGetVar(tg.id, "ShowZerro");
         --TitanPanelGatheredInfoBoard_OnLoad(self);
@@ -358,9 +323,8 @@ function tg.Button_OnLoad(self)
             tg.addItemsFromLootsToTooltip(self, targetName, tg.getVar(LOOT_HISTORY), tg.getVar(ITEM_HISTORY));
 
             if(not TitanGetVar(tg.id, "ShowStacksInTooltip"))then 
-                local fndBags = GetItemsFromBags(targetName)
-                local fndBank = GetItemsFromBank(targetName)
-                tg.addTooltipText(self, TG_C_YELLOW..TG_INFO_TOTAL..TG_C_VIOLET..fndBags + fndBank..TG_C_YELLOW.." Bags: "..TG_C_VIOLET..fndBags..TG_C_YELLOW.." Bank: "..TG_C_VIOLET..fndBank.."|r", GameFontNormal, TG_C_BROWN)
+                local fndBags, fndBank, iTotal = TitanGathered2_GetItemCount(targetName)
+                tg.addTooltipText(self, TG_C_YELLOW..TG_INFO_TOTAL..TG_C_VIOLET..iTotal..TG_C_YELLOW.." Bags: "..TG_C_VIOLET..fndBags..TG_C_YELLOW.." Bank: "..TG_C_VIOLET..fndBank.."|r", GameFontNormal, TG_C_BROWN)
             end
         end
     end
@@ -370,9 +334,11 @@ function tg.Button_OnLoad(self)
         if(TitanGetVar(tg.id, "ChangeTooltipAnchor"))then return end
         -- local _, unit = self:GetUnit();
         -- local uiScale, x, y = parent:GetEffectiveScale(), GetCursorPosition()
-        -- if(not UnitExists("mouseover"))then
-            self:SetOwner(parent, "ANCHOR_CURSOR_RIGHT", 30, -100)
-        -- end
+        if(not UnitExists("mouseover"))then
+            self:SetOwner(parent, "ANCHOR_CURSOR_RIGHT", 40, -135)
+        else
+            self:SetOwner(parent, "ANCHOR_CURSOR_RIGHT", 30, -115)
+        end
     end)
 
 
@@ -888,67 +854,67 @@ function tg.Button_OnLoad(self)
     -- TitanGathered2_bankClose()
     -- On event BANKFRAME_CLOSE will stored data to db
     -------------------------------------------------------
-    function TitanGathered2_bankClose()
-        if (TG_EV == 1) then
-            return;
-        else
-            local dbb = {};
+    -- function TitanGathered2_bankClose()
+    --     if (TG_EV == 1) then
+    --         return;
+    --     else
+    --         local dbb = {};
 
-            if GetNumBankSlots() then
-                maxBslot, _ = GetNumBankSlots();
-            else
-                maxBslot = 0;
-            end
+    --         if GetNumBankSlots() then
+    --             maxBslot, _ = GetNumBankSlots();
+    --         else
+    --             maxBslot = 0;
+    --         end
 
-            local nbslots, b, s, t, n, nn;
-            local i_count = 0;
+    --         local bagSlots, b, s, t, n, nn;
+    --         local i_count = 0;
 
-            reagentBanka = GetContainerNumSlots(-3);
+    --         reagentBanka = GetContainerNumSlots(-3);
 
-            for s = 0, reagentBanka do
-                local texture, itemCount = GetContainerItemInfo(-3, s);
+    --         for s = 0, reagentBanka do
+    --             local texture, itemCount = GetContainerItemInfo(-3, s);
 
-                iName = GetContainerItemLink(-3, s);
-                if (iName) then
-                    nitem = {name = iName, value = itemCount};
-                    table.insert(dbb, nitem);
-                end
-            end
+    --             iName = GetContainerItemLink(-3, s);
+    --             if (iName) then
+    --                 nitem = {name = iName, value = itemCount};
+    --                 table.insert(dbb, nitem);
+    --             end
+    --         end
 
-            nbanka = GetContainerNumSlots(-1);
-            for s = 0, nbanka do
-                local texture, itemCount = GetContainerItemInfo(-1, s);
+    --         nbanka = GetContainerNumSlots(-1);
+    --         for s = 0, nbanka do
+    --             local texture, itemCount = GetContainerItemInfo(-1, s);
 
-                iName = GetContainerItemLink(-1, s);
-                if (iName) then
-                    nitem = {name = iName, value = itemCount};
-                    table.insert(dbb, nitem);
-                end
-            end
+    --             iName = GetContainerItemLink(-1, s);
+    --             if (iName) then
+    --                 nitem = {name = iName, value = itemCount};
+    --                 table.insert(dbb, nitem);
+    --             end
+    --         end
 
-            if (maxBslot > 0) then
-                for b = 1, maxBslot, 1 do
-                    ibag = b + 4;
-                    nbslots = GetContainerNumSlots(ibag);
+    --         if (maxBslot > 0) then
+    --             for b = 1, maxBslot, 1 do
+    --                 ibag = b + 4;
+    --                 bagSlots = GetContainerNumSlots(ibag);
 
-                    for s = 1, nbslots do
-                        local texture, itemCount = GetContainerItemInfo(ibag, s);
-                        iName = GetContainerItemLink(ibag, s);
+    --                 for s = 1, bagSlots do
+    --                     local texture, itemCount = GetContainerItemInfo(ibag, s);
+    --                     iName = GetContainerItemLink(ibag, s);
 
-                        if (iName) then
-                            nitem = {name = iName, value = itemCount};
-                            table.insert(dbb, nitem);
-                        end
-                    end
-                end
-            end
+    --                     if (iName) then
+    --                         nitem = {name = iName, value = itemCount};
+    --                         table.insert(dbb, nitem);
+    --                     end
+    --                 end
+    --             end
+    --         end
 
-            TG_EV = 1;
+    --         TG_EV = 1;
 
-            echo(TG_COLOR_GREEN.."Titan Gathered: "..TG_C_YELLOW.."bank database updated..");
-            TitanSetVar(tg.id, "bankHistory", dbb);
-        end
-    end
+    --         echo(TG_COLOR_GREEN.."Titan Gathered: "..TG_C_YELLOW.."bank database updated..");
+    --         TitanSetVar(tg.id, "bankHistory", dbb);
+    --     end
+    -- end
 
     function tg.addItemsFromLootsToTooltip(self, targetName, lootHistory, itemHistory)
         local _loots = tg.updatePercentsToLootsHistory(targetName, lootHistory, itemHistory) or {};
@@ -961,11 +927,8 @@ function tg.Button_OnLoad(self)
 
     end
 
-    function getItemStackSizeInfo(iname)
-        local _bgs = GetItemsFromBags(iname)
-        local _bnk = GetItemsFromBank(iname)
-        local _sum = _bgs + _bnk
-        
+    function getItemStackSizeInfo(itemName)
+        local _bgs, _bnk, _sum = TitanGathered2_GetItemCount(itemName)
         local _str = 
         TG_C_YELLOW..
         "Sum: "..
@@ -979,22 +942,22 @@ function tg.Button_OnLoad(self)
         return printf(_str, _sum, _bgs, _bnk)
     end
 
-    function tg.checkForReagentCounts(sParentName, itemsHistory, minables)
-        local sum, bank, bags, livetime = 0, 0, 0, 0
+    -- function tg.checkForReagentCounts(sParentName, itemsHistory, minables)
+    --     local sum, bank, bags, livetime = 0, 0, 0, 0
 
-        for i, n in pairs(itemsHistory) do
-            if (type(n.source) == "table") then
-                local minableId = tg.getMinablesId(sParentName, minables)
-                if (n.source[minableId] ~= nil) then
-                    bags = GetItemsFromBags(n.name)
-                    bank = GetItemsFromBank(n.name)
-                    livetime = n.value
-                    sum = bank + bags
-                end
-            end
-        end
-        return sum, bank, bags, livetime
-    end
+    --     for i, n in pairs(itemsHistory) do
+    --         if (type(n.source) == "table") then
+    --             local minableId = tg.getMinablesId(sParentName, minables)
+    --             if (n.source[minableId] ~= nil) then
+    --                 bags = TitanGathered2_GetItemCount(n.name)
+    --                 bank = GetItemsFromBank(n.name)
+    --                 livetime = n.value
+    --                 sum = bank + bags
+    --             end
+    --         end
+    --     end
+    --     return sum, bank, bags, livetime
+    -- end
 
     function tg._sort(_tObject, _key)
         if(type(_tObject) == "table")then
@@ -1137,45 +1100,32 @@ function tg.Button_OnLoad(self)
     end
 
     -- Return item counts from bank
-    function GetItemsFromBank(item)
-        local dbb = TitanGetVar(tg.id, "bankHistory");
-        local i, e;
-        local eName;
-        local i_count = 0;
+    -- function GetItemsFromBank(item)
+    --     local dbb = TitanGetVar(tg.id, "bankHistory");
+    --     local i, e;
+    --     local eName;
+    --     local i_count = 0;
 
-        if (dbb) then
-            for i, e in pairs(dbb) do
-                if (type(e) == "table") then
-                    local bName = GetItemInfo(e.name);
-                    if (bName == item) then
-                        i_count = i_count + e.value;
-                    end
-                end
-            end
-        end
-        return i_count;
-    end
+    --     if (dbb) then
+    --         for i, e in pairs(dbb) do
+    --             if (type(e) == "table") then
+    --                 local bName = GetItemInfo(e.name);
+    --                 if (bName == item) then
+    --                     i_count = i_count + e.value;
+    --                 end
+    --             end
+    --         end
+    --     end
+    --     return i_count;
+    -- end
 
     -- Return all intems from bags
-    function GetItemsFromBags(item)
-        local nbslots, b, s, t, n;
-        local i_count = 0;
+    function TitanGathered2_GetItemCount(item)
+        local bags = GetItemCount(item)
+        local total = GetItemCount(item, true)
+        local bank = total - bags
 
-        for b = 0, 4 do
-            nbslots = GetContainerNumSlots(b);
-            for s = 0, nbslots do
-                -- TODO simlify this code!!
-                local _, itemCount = GetContainerItemInfo(b, s);
-                t = GetContainerItemLink(b, s);
-                if (t) then
-                    local bName = GetItemInfo(t);
-                    if (bName == item) then
-                        i_count = i_count + itemCount;
-                    end
-                end
-            end
-        end
-        return i_count;
+        return bags, bank, total
     end
 
 
@@ -1204,6 +1154,7 @@ function tg.Button_OnLoad(self)
         _G["GameTooltipTextLeft"..tooltipIndex]:SetFontObject(size)
 
     end
+
     ----------------------------------------------------
     -- UTILS
     ----------------------------------------------------
