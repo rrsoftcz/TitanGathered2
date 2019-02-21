@@ -334,22 +334,24 @@ function tg.Button_OnLoad(self)
 
         if(TitanGetVar(tg.id, "ShowInfoTooltip"))then return end
 
-        local tooltipLabel = getglobal("GameTooltipTextLeft1")
-        local targetName = tooltipLabel:GetText()
+        local gttlabel = getglobal("GameTooltipTextLeft1")
+        local targetName = gttlabel:GetText()
         local objectCategory, objectItem = tg.GetItemCategory(targetName)
         local _prof = function(a) return a == nil or a end
         local _skil = function(b) return b == nil or b end
-
-        local skillInfo = tg.getItemProfessionInfo(_prof(objectCategory), _skil(objectItem))
-
-        if (tg.isTargetGatherableObject(targetName, TG_CATEGORIES) == 1) then
-
+        local _found, _professions = tg.isTargetGatherableObject(targetName, TG_CATEGORIES)
+        
+        if (_found == 1) then
             tg.addEmptyLineToTooltip(self)
-
             tg.addTooltipText(self, TG_INFO_LABEL, GameFontNormal)
+
+            local skillInfo = tg.getItemProfessionInfo(_prof(objectCategory), _skil(objectItem))
+            
             if (skillInfo ~= nil) then
                 skillInfo = TG_C_BROWN.."Required Skill: |r"..skillInfo.name.."|r "..skillInfo.color..1
+                _reagents = TG_C_BROWN.."Reagents for: |r"..table.concat(_professions,TG_C_WHITE.." , |r").."|r "
                 tg.addTooltipText(self, skillInfo, GameFontNormalSmall, TG_C_BROWN)
+                tg.addTooltipText(self, _reagents, GameFontNormalSmall, TG_C_BROWN)
                 tg.addEmptyLineToTooltip(self)
             end
 
@@ -358,7 +360,6 @@ function tg.Button_OnLoad(self)
             if(not TitanGetVar(tg.id, "ShowStacksInTooltip"))then 
                 local fndBags = GetItemsFromBags(targetName)
                 local fndBank = GetItemsFromBank(targetName)
-                
                 tg.addTooltipText(self, TG_C_YELLOW..TG_INFO_TOTAL..TG_C_VIOLET..fndBags + fndBank..TG_C_YELLOW.." Bags: "..TG_C_VIOLET..fndBags..TG_C_YELLOW.." Bank: "..TG_C_VIOLET..fndBank.."|r", GameFontNormal, TG_C_BROWN)
             end
         end
@@ -1075,6 +1076,20 @@ function tg.Button_OnLoad(self)
         return found
     end
 
+    function tg.getPluginsProfessions(index)
+        -- local sgUID, _ = GetLootSourceInfo(index)
+        -- local intID = getIDformGUIDString(sgUID)
+        local _professions = {}
+
+        for _, plugin in pairs(tgPlugins)do
+            -- found = plugin.getGatherableSourceObject(found.id)
+            if(plugin.id)then 
+                table.insert(_professions, plugin.id)
+            end
+        end
+        return _professions
+    end
+    
     function tg.getItemProfessionInfo(category, item)
         local prof_1, prof_2, archaeology, fishing, cooking, firstaid = GetProfessions()
         local professions = {}
@@ -1091,7 +1106,7 @@ function tg.Button_OnLoad(self)
             if (category ~= true and _p ~= nil) then
                 local sName, _, sRank, sMax, _, _, _ = GetProfessionInfo(_p)
                 if (sName == tostring(category.profession)) then
-                    return { name = sName, rank = sRank, max = sMax, color = "|cffffffff" }
+                    return { name = sName, rank = sRank, max = sMax, color = TG_C_WHITE }
                 end
             end
         end
@@ -1106,16 +1121,19 @@ function tg.Button_OnLoad(self)
 
     -- Return boolean value even given item exist in the gathering db
     function tg.isTargetGatherableObject(object, db)
-        for i, c in pairs(db) do
+        local found = 0
+        local array = {}
+        for _, c in pairs(db) do
             if (not TitanGetVar(tg.id, c.smenu)) then
-                for i, iname in pairs(c.db) do
+                for _, iname in pairs(c.db) do
                     if (object == iname.name) then
-                        return 1;
+                        table.insert(array, c.profession)
+                        found = 1
                     end
                 end
             end
         end
-        return 0;
+        return found, array;
     end
 
     -- Return item counts from bank
