@@ -84,7 +84,7 @@ function tg.Button_OnLoad(self)
             ShowHides = 1,
             ShowCloths = 1,
             ShowHerbs = 1,
-            ShowEssences = 1,
+            ShowEnchanting = 1,
             ShowMisc = 1,
             ShowPigments = 1,
             ShowPoisons = 1,
@@ -102,11 +102,9 @@ function tg.Button_OnLoad(self)
         self:RegisterEvent("PLAYER_ENTERING_WORLD");
         self:RegisterEvent("PLAYER_LEAVING_WORLD");
         self:RegisterEvent("LOOT_OPENED");
-        -- self:RegisterEvent("BANKFRAME_OPENED");
-        -- self:RegisterEvent("BANKFRAME_CLOSED");
         self:RegisterEvent("TRADE_SKILL_SHOW");
         self:RegisterEvent("SKILL_LINES_CHANGED");
-        -- self:RegisterEvent("CURSOR_UPDATE");
+
         tg:HookTooltipEvents();
     end
 
@@ -216,11 +214,8 @@ function tg.Button_OnLoad(self)
     -- Create tooltip label --
     --------------------------
     function getGatheredTooltipInfo(item, color)
-        -- local v_count = TitanGathered2_CountItem(item.tag);
-        local v_count = GetItemCount(item.tag);
-        -- local b_count = TitanGathered2_CountItemStoredInBank(item.tag);
-        local b_count = (GetItemCount(item.tag, true) - v_count);
         local nextText = "";
+        local v_count, b_count, sum = TitanGathered2_GetItemCount(item.tag)
 
         if (TitanGetVar(tg.id, "ShowZerro")) then
             if (v_count > 0) then
@@ -281,15 +276,9 @@ function tg.Button_OnLoad(self)
         if (event == "LOOT_OPENED") then
             TitanGathered2_loot();
         end
-        -- if (event == "BANKFRAME_OPENED") then
-        --     TitanGathered2_bankOpen();
-        -- end
-        -- if (event == "BANKFRAME_CLOSED") then
-        --     TitanGathered2_bankClose();
-        -- end
+
         TitanPanelButton_UpdateButton(tg.id);
         tg.showZero = TitanGetVar(tg.id, "ShowZerro");
-        --TitanPanelGatheredInfoBoard_OnLoad(self);
     end
 
     -----------------------------------------------------------
@@ -332,8 +321,7 @@ function tg.Button_OnLoad(self)
 
     hooksecurefunc("GameTooltip_SetDefaultAnchor", function(self, parent)
         if(TitanGetVar(tg.id, "ChangeTooltipAnchor"))then return end
-        -- local _, unit = self:GetUnit();
-        -- local uiScale, x, y = parent:GetEffectiveScale(), GetCursorPosition()
+
         if(not UnitExists("mouseover"))then
             self:SetOwner(parent, "ANCHOR_CURSOR_RIGHT", 40, -135)
         else
@@ -810,10 +798,6 @@ function tg.Button_OnLoad(self)
                 
                 TitanGathered2_PrintDebug("Updating ".. ITEM_HISTORY.." database, added "..tostring(item))
                 TitanGathered2_PrintToLog(item, isOn)                
-                -- if (not isOn) then
-                --     local info = getItemStackSizeInfo(item)
-                --     echo(printf(TG_C_YELLOW.."TG item found |r %s %s|r", item, info))
-                -- end
             end
         else
             if (fnd == true) then
@@ -826,10 +810,6 @@ function tg.Button_OnLoad(self)
 
                 TitanGathered2_PrintDebug("Inserting ".. ITEM_HISTORY.." database, added "..tostring(item))
                 TitanGathered2_PrintToLog(item, isOn)
-                -- if (not isOn) then
-                --     local info = getItemStackSizeInfo(item)
-                --     echo(printf(TG_C_YELLOW.."TG item found |r %s %s|r", item, info))
-                -- end
             end
         end
         tg.setVar(ITEM_HISTORY, db)
@@ -842,79 +822,7 @@ function tg.Button_OnLoad(self)
             echo(printf(TG_C_YELLOW.."TG item found |r %s %s|r", itemname, info))
         end
     end
-    -------------------------------------------------------
-    -- TitanGathered2_bankOpen()
-    -- On event BANKFRAME_OPEN will cleared all data in db
-    -------------------------------------------------------
-    function TitanGathered2_bankOpen()
-        TG_EV = 0;
-    end
 
-    -------------------------------------------------------
-    -- TitanGathered2_bankClose()
-    -- On event BANKFRAME_CLOSE will stored data to db
-    -------------------------------------------------------
-    -- function TitanGathered2_bankClose()
-    --     if (TG_EV == 1) then
-    --         return;
-    --     else
-    --         local dbb = {};
-
-    --         if GetNumBankSlots() then
-    --             maxBslot, _ = GetNumBankSlots();
-    --         else
-    --             maxBslot = 0;
-    --         end
-
-    --         local bagSlots, b, s, t, n, nn;
-    --         local i_count = 0;
-
-    --         reagentBanka = GetContainerNumSlots(-3);
-
-    --         for s = 0, reagentBanka do
-    --             local texture, itemCount = GetContainerItemInfo(-3, s);
-
-    --             iName = GetContainerItemLink(-3, s);
-    --             if (iName) then
-    --                 nitem = {name = iName, value = itemCount};
-    --                 table.insert(dbb, nitem);
-    --             end
-    --         end
-
-    --         nbanka = GetContainerNumSlots(-1);
-    --         for s = 0, nbanka do
-    --             local texture, itemCount = GetContainerItemInfo(-1, s);
-
-    --             iName = GetContainerItemLink(-1, s);
-    --             if (iName) then
-    --                 nitem = {name = iName, value = itemCount};
-    --                 table.insert(dbb, nitem);
-    --             end
-    --         end
-
-    --         if (maxBslot > 0) then
-    --             for b = 1, maxBslot, 1 do
-    --                 ibag = b + 4;
-    --                 bagSlots = GetContainerNumSlots(ibag);
-
-    --                 for s = 1, bagSlots do
-    --                     local texture, itemCount = GetContainerItemInfo(ibag, s);
-    --                     iName = GetContainerItemLink(ibag, s);
-
-    --                     if (iName) then
-    --                         nitem = {name = iName, value = itemCount};
-    --                         table.insert(dbb, nitem);
-    --                     end
-    --                 end
-    --             end
-    --         end
-
-    --         TG_EV = 1;
-
-    --         echo(TG_COLOR_GREEN.."Titan Gathered: "..TG_C_YELLOW.."bank database updated..");
-    --         TitanSetVar(tg.id, "bankHistory", dbb);
-    --     end
-    -- end
 
     function tg.addItemsFromLootsToTooltip(self, targetName, lootHistory, itemHistory)
         local _loots = tg.updatePercentsToLootsHistory(targetName, lootHistory, itemHistory) or {};
@@ -942,22 +850,6 @@ function tg.Button_OnLoad(self)
         return printf(_str, _sum, _bgs, _bnk)
     end
 
-    -- function tg.checkForReagentCounts(sParentName, itemsHistory, minables)
-    --     local sum, bank, bags, livetime = 0, 0, 0, 0
-
-    --     for i, n in pairs(itemsHistory) do
-    --         if (type(n.source) == "table") then
-    --             local minableId = tg.getMinablesId(sParentName, minables)
-    --             if (n.source[minableId] ~= nil) then
-    --                 bags = TitanGathered2_GetItemCount(n.name)
-    --                 bank = GetItemsFromBank(n.name)
-    --                 livetime = n.value
-    --                 sum = bank + bags
-    --             end
-    --         end
-    --     end
-    --     return sum, bank, bags, livetime
-    -- end
 
     function tg._sort(_tObject, _key)
         if(type(_tObject) == "table")then
@@ -1004,10 +896,6 @@ function tg.Button_OnLoad(self)
     end
 
 
-    -------------------------------------------------------
-    -- TitanGathered2_GetCategory()
-    -- Check if materil is member of tradeskil mats
-    -------------------------------------------------------
     function tg.GetItemCategory(itemName)
         local i, iname;
         local f = 0;
@@ -1040,12 +928,9 @@ function tg.Button_OnLoad(self)
     end
 
     function tg.getPluginsProfessions(index)
-        -- local sgUID, _ = GetLootSourceInfo(index)
-        -- local intID = getIDformGUIDString(sgUID)
         local _professions = {}
 
         for _, plugin in pairs(tgPlugins)do
-            -- found = plugin.getGatherableSourceObject(found.id)
             if(plugin.id)then 
                 table.insert(_professions, plugin.id)
             end
@@ -1098,26 +983,6 @@ function tg.Button_OnLoad(self)
         end
         return found, array;
     end
-
-    -- Return item counts from bank
-    -- function GetItemsFromBank(item)
-    --     local dbb = TitanGetVar(tg.id, "bankHistory");
-    --     local i, e;
-    --     local eName;
-    --     local i_count = 0;
-
-    --     if (dbb) then
-    --         for i, e in pairs(dbb) do
-    --             if (type(e) == "table") then
-    --                 local bName = GetItemInfo(e.name);
-    --                 if (bName == item) then
-    --                     i_count = i_count + e.value;
-    --                 end
-    --             end
-    --         end
-    --     end
-    --     return i_count;
-    -- end
 
     -- Return all intems from bags
     function TitanGathered2_GetItemCount(item)
