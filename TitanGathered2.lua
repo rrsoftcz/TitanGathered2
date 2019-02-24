@@ -28,7 +28,6 @@ tg.author = GetAddOnMetadata(tg.addon, "Author") or "Unknown"
 
 function tg:HookTooltipEvents()
     for scriptName, hookFunc in next, ScriptHooks do
-        print("Hookuju: " .. scriptName);
         gtt:HookScript(scriptName, hookFunc);
     end
 end
@@ -313,7 +312,7 @@ function tg.Button_OnLoad(self)
 
             if(not TitanGetVar(tg.id, "ShowStacksInTooltip"))then 
                 local fndBags, fndBank, iTotal = TitanGathered2_GetItemCount(targetName)
-                tg.addTooltipText(self, TG_C_YELLOW..TG_INFO_TOTAL..TG_C_VIOLET..iTotal..TG_C_YELLOW.." Bags: "..TG_C_VIOLET..fndBags..TG_C_YELLOW.." Bank: "..TG_C_VIOLET..fndBank.."|r", GameFontNormal, TG_C_BROWN)
+                tg.addTooltipText(self, TG_C_YELLOW..TG_INFO_TOTAL..TG_C_VIOLET..iTotal..TG_C_YELLOW.." Bags: "..TG_C_VIOLET..fndBags..TG_C_YELLOW.." Bank: "..TG_C_VIOLET..fndBank.."|r", GameFontNormalSmall, TG_C_BROWN)
             end
         end
     end
@@ -343,7 +342,7 @@ function tg.Button_OnLoad(self)
             if(tooltipTextLeft) then
                 local _text = tooltipTextLeft:GetText()
 
-                for i, obj in pairs(TG_MINABLES) do
+                for i, obj in pairs(tg.getMinables()) do
                     if(_text == obj.name) then
                         local _m = function(a) return type(a) ~= "table" or a end
                         local _f = _m(tg.getObjectFromLootHistory(obj.id))
@@ -360,7 +359,7 @@ function tg.Button_OnLoad(self)
     
                             local loots = tg._sort(_f.loots, "sum") or {}
 
-                            for i, gItem in pairs(loots)do
+                            for i, gItem in pairs(loots) do
                                 local all = _f.sumes or 0
                                 local c = gItem.sum or 0
                                 local _p = tg.calculatePercentage(all, c)
@@ -370,7 +369,7 @@ function tg.Button_OnLoad(self)
                                     if(not TitanGetVar(tg.id, "ShowStacksInTooltip"))then 
                                         info = getItemStackSizeInfo(gItem.name);
                                     end
-                                    local color = TitanGathered2_GetColorByRarity(gItem.name);
+                                    local color = TitanGathered2_GetColorByRarity(gItem.name) or TG_C_WHITE;
                                     local tooltipText = printf(color.."%s %s"..TG_C_AQUA.." (%s)|r", gItem.name, info, _p)
                                     tg.addTooltipText(self, tooltipText, GameFontNormalSmall)
                                 else
@@ -881,6 +880,20 @@ function tg.Button_OnLoad(self)
         return 0
     end
 
+    function tg.getMinables()
+        TG_MINABLES = {}
+        for _, plugin in pairs(tgPlugins)do
+            if(type(plugin.getMinables) == "function")then
+                if(#plugin.getMinables())then
+                    for _, minable in pairs(plugin.getMinables())do
+                        table.insert(TG_MINABLES, minable)
+                    end
+                end
+            end
+        end
+        return TG_MINABLES
+    end
+
     function tg.findItemInCollection(itemName)
         local category, item = tg.GetItemCategory(itemName)
         return item ~= nil, category
@@ -968,13 +981,13 @@ function tg.Button_OnLoad(self)
     end
 
     -- Return boolean value even given item exist in the gathering db
-    function tg.isTargetGatherableObject(object, db)
+    function tg.isTargetGatherableObject(itemName, tCategories)
         local found = 0
         local array = {}
-        for _, c in pairs(db) do
+        for _, c in pairs(tCategories) do
             if (not TitanGetVar(tg.id, c.smenu)) then
                 for _, iname in pairs(c.db) do
-                    if (object == iname.name) then
+                    if (itemName == iname.name) then
                         table.insert(array, c.profession)
                         found = 1
                     end
@@ -997,7 +1010,7 @@ function tg.Button_OnLoad(self)
     function TitanGathered2_GetColorByRarity(item_id)
         local sName, itemLink, i = GetItemInfo(item_id);
         if(not i) then
-            return '|cffffff|r'
+            return '|cffffffff'
         end
 
         local r, g, b, hex = GetItemQualityColor(i);
