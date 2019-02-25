@@ -693,26 +693,28 @@ function tg.Button_OnLoad(self)
     function TitanGathered2_loot()
         for index = 1, GetNumLootItems(), 1 do
             if (LootSlotHasItem(index)) then
-                local lootIcon, lootName, lootQuantity, lootQuality, locked, isQuestItem, questID, isActive = GetLootSlotInfo(index)
-                local sName, sLink, iRarity, iLevel, iMinLevel, sType, sSubType, iStackCount = GetItemInfo(lootName)
+                local _, lootName, lootQuantity = GetLootSlotInfo(index)
+                local _, sLink = GetItemInfo(lootName)
                 local iParent = tg.getLootParentSourceObject(index)
 
-                if (iParent.name ~= nil) then
+                if (iParent.name ~= nil and tg.isTargetGatherableObject(lootName, TG_CATEGORIES)) then
+                    dump(sLink)
                     local itemId = getItemIdFromLink(sLink)
-                    tg.updateItemFromLoot(lootName, iParent, lootQuantity, index)
-                    -- if (itemId > 0) then
-                    --     local oItem = {id = itemId, name = lootName}
-                    --     tgo.addItemToCollection(oItem)
-                    -- end
+                    tg.PluginUpdateLootItemsDb(lootName, sLink, iParent, lootQuantity, index)
+                    tg.PluginUpdateHistory(lootName, lootQuantity, sLink, iParent)
+                else
+                    TitanGathered2_PrintDebug(printf(TG_COLOR_RED.."Item %s not found in loot history database.|r", lootName))
                 end
-                tg.PluginUpdateHistory(lootName, lootQuantity, sLink, iParent)
              end
         end
     end
 
-    function tg.updateItemFromLoot(sName, lootSource, lootQuantity, index)
+
+    function tg.PluginUpdateLootItemsDb(sName, itemLink, lootSource, lootQuantity, index)
         local lootHistoryDb = tg.getVar(LOOT_HISTORY)
         local foundObject = tg.getObjectFromLootHistory(lootSource.id, lootHistoryDb)
+        local _co = TG_COLOR_ORANGE
+        local _cw = TG_C_WHITE
 
         if (foundObject ~= nil) then
             local count = foundObject.count or 1
@@ -743,7 +745,7 @@ function tg.Button_OnLoad(self)
 
             table.remove(lootHistoryDb, lootSource.id)
             table.insert(lootHistoryDb, lootSource.id, foundObject)
-            TitanGathered2_PrintDebug("Updating ".. LOOT_HISTORY.." database, added "..tostring(sName))
+            TitanGathered2_PrintDebug(_co.."Updating ".. _cw..LOOT_HISTORY.._co..", item updated: "..itemLink)
         else
             foundObject = lootSource
             foundObject.count = 1
@@ -752,19 +754,21 @@ function tg.Button_OnLoad(self)
 
             table.insert(foundObject.loots, {name = sName, cnt = 1, sum = lootQuantity})
             table.insert(lootHistoryDb, lootSource.id, foundObject)
-            TitanGathered2_PrintDebug("Inserting ".. LOOT_HISTORY.." database, added "..tostring(sName))
+            TitanGathered2_PrintDebug(_co.."Inserting ".. _cw..LOOT_HISTORY.._co..", item added: "..itemLink)
         end
+        
         tg.setVar(LOOT_HISTORY, lootHistoryDb)
     end
 
 
-    function tg.PluginUpdateHistory(item,iQuantity,link,oParent)
+    function tg.PluginUpdateHistory(item, iQuantity, itemLink, oParent)
         local db = tg.getVar(ITEM_HISTORY)
         local i,d
         local oItem	= {}
         local oSrc = {}
         local fndSUM, fndBags, fndBank, fndCount, parentid, oldValue, newValue, found = 0,0,0,0,0,0,0,0,0
-
+        local _co = TG_COLOR_ORANGE
+        local _cw = TG_C_WHITE
 
         for i,d in pairs(db) do
             if(d.name == item)then
@@ -795,7 +799,7 @@ function tg.Button_OnLoad(self)
                 table.remove(db, found)
                 table.insert(db,found,oItem)
                 
-                TitanGathered2_PrintDebug("Updating ".. ITEM_HISTORY.." database, added "..tostring(item))
+                TitanGathered2_PrintDebug(_co.."Updating ".._cw..ITEM_HISTORY.._co..", item updated: "..itemLink)
                 TitanGathered2_PrintToLog(item, isOn)                
             end
         else
@@ -807,7 +811,7 @@ function tg.Button_OnLoad(self)
                 oItem = { name = item, value = iQuantity, source = oSrc }
                 table.insert(db,oItem)
 
-                TitanGathered2_PrintDebug("Inserting ".. ITEM_HISTORY.." database, added "..tostring(item))
+                TitanGathered2_PrintDebug(_co.."Inserting ".._cw..ITEM_HISTORY.._co..", tem added: "..itemLink)
                 TitanGathered2_PrintToLog(item, isOn)
             end
         end
@@ -925,7 +929,7 @@ function tg.Button_OnLoad(self)
         return nil;
     end
 
-    -- Greb GUID
+    -- Greb GUID Must be called only from loot event
     function tg.getLootParentSourceObject(index)
         local sgUID, _ = GetLootSourceInfo(index)
         local intID = getIDformGUIDString(sgUID)
