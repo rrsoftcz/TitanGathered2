@@ -9,6 +9,26 @@ TG_PREFIX_SHOW = "Show "
 TG_INFO_LABEL = "Titan Gathered info:";
 TG_INFO_TOTAL = "Total amount: ";
 TG_INFO_OBTAINED = "Already obtained:";
+TG_DEFAULT_OPERATION = "Gathered"
+
+TG_PROFESSIONS_SPELL = {
+	{ 
+		id = "Mining", 
+		operation = "Minned"
+	},
+	{
+		id = "Herbalism",
+		operation = "Gathered"
+	},
+	{
+		id = "Skinning",
+		operation = "Skinned"
+	},
+	{
+		id = "Enchanting",
+		operation = "Enchanted"
+	}
+}
 
 -- REAGENTS --------------------------------------------
 --TG_LOCAL_ORES = "Ores ";
@@ -94,7 +114,7 @@ TG_C_AQUA = "|cff00ffff"
 
 
 
-TG_ITEMS = {
+TG_ITEMSXXXX = {
 
 	{ tag = "2840", name = "Copper Bar", save="a4893437cb", cat = TG_LOCAL_BARS, skill = 1 },
 	{ tag = "3576", name = "Tin Bar", save="9923bf07dc", cat = TG_LOCAL_BARS, skill = 65 },

@@ -293,7 +293,9 @@ function tg.Button_OnLoad(self)
         local _prof = function(a) return a == nil or a end
         local _skil = function(b) return b == nil or b end
         local _found, _professions = tg.isTargetGatherableObject(targetName, TG_CATEGORIES)
-        
+        -- tgPrint("_found", _found)
+        -- tgPrint("_professions", _professions)
+       
         if (_found == 1) then
             tg.addEmptyLineToTooltip(self)
             tg.addTooltipText(self, TG_INFO_LABEL, GameFontNormal)
@@ -302,16 +304,15 @@ function tg.Button_OnLoad(self)
             
             if (skillInfo ~= nil) then
                 skillInfo = TG_C_BROWN.."Required Skill: |r"..skillInfo.name.."|r "..skillInfo.color..1
-                _reagents = TG_C_BROWN.."Reagents for: |r"..table.concat(_professions,TG_C_WHITE.." , |r").."|r "
                 tg.addTooltipText(self, skillInfo, GameFontNormalSmall, TG_C_BROWN)
-                tg.addTooltipText(self, _reagents, GameFontNormalSmall, TG_C_BROWN)
                 tg.addEmptyLineToTooltip(self)
             end
 
-            tg.addItemsFromLootsToTooltip(self, targetName, tg.getVar(LOOT_HISTORY), tg.getVar(ITEM_HISTORY));
+            tg.addItemsFromLootsToTooltip(self, targetName, tg.getVar(LOOT_HISTORY), tg.getVar(ITEM_HISTORY), objectCategory);
 
             if(not TitanGetVar(tg.id, "ShowStacksInTooltip"))then 
                 local fndBags, fndBank, iTotal = TitanGathered2_GetItemCount(targetName)
+                tg.addEmptyLineToTooltip(self)
                 tg.addTooltipText(self, TG_C_YELLOW..TG_INFO_TOTAL..TG_C_VIOLET..iTotal..TG_C_YELLOW.." Bags: "..TG_C_VIOLET..fndBags..TG_C_YELLOW.." Bank: "..TG_C_VIOLET..fndBank.."|r", GameFontNormalSmall, TG_C_BROWN)
             end
         end
@@ -320,7 +321,7 @@ function tg.Button_OnLoad(self)
 
     hooksecurefunc("GameTooltip_SetDefaultAnchor", function(self, parent)
         if(TitanGetVar(tg.id, "ChangeTooltipAnchor"))then return end
-
+        
         if(not UnitExists("mouseover"))then
             self:SetOwner(parent, "ANCHOR_CURSOR_RIGHT", 40, -135)
         else
@@ -342,8 +343,9 @@ function tg.Button_OnLoad(self)
             if(tooltipTextLeft) then
                 local _text = tooltipTextLeft:GetText()
 
-                for i, obj in pairs(tg.getMinables()) do
+                for _, obj in pairs(tg.getMinables()) do
                     if(_text == obj.name) then
+
                         local _m = function(a) return type(a) ~= "table" or a end
                         local _f = _m(tg.getObjectFromLootHistory(obj.id))
                         
@@ -359,7 +361,7 @@ function tg.Button_OnLoad(self)
     
                             local loots = tg._sort(_f.loots, "sum") or {}
 
-                            for i, gItem in pairs(loots) do
+                            for _, gItem in pairs(loots) do
                                 local all = _f.sumes or 0
                                 local c = gItem.sum or 0
                                 local _p = tg.calculatePercentage(all, c)
@@ -373,7 +375,7 @@ function tg.Button_OnLoad(self)
                                     local tooltipText = printf(color.."%s %s"..TG_C_AQUA.." (%s)|r", gItem.name, info, _p)
                                     tg.addTooltipText(self, tooltipText, GameFontNormalSmall)
                                 else
-                                    TitanGathered2_PrintDebug("Error: getObjectFromLootHistory() returned object without name!")
+                                    TitanGathered2_PrintDebug("Error: getObjectFromLootHistory() returned object without name!", TG_COLOR_RED)
                                 end
                             end
                         end
@@ -696,9 +698,10 @@ function tg.Button_OnLoad(self)
                 local _, lootName, lootQuantity = GetLootSlotInfo(index)
                 local _, sLink = GetItemInfo(lootName)
                 local iParent = tg.getLootParentSourceObject(index)
+                local isGatherable, category = tg.findItemInCollection(lootName)
 
-                if (iParent.name ~= nil and tg.isTargetGatherableObject(lootName, TG_CATEGORIES)) then
-                    dump(sLink)
+                if (iParent.name ~= nil and isGatherable) then
+                    
                     local itemId = getItemIdFromLink(sLink)
                     tg.PluginUpdateLootItemsDb(lootName, sLink, iParent, lootQuantity, index)
                     tg.PluginUpdateHistory(lootName, lootQuantity, sLink, iParent)
@@ -713,6 +716,7 @@ function tg.Button_OnLoad(self)
     function tg.PluginUpdateLootItemsDb(sName, itemLink, lootSource, lootQuantity, index)
         local lootHistoryDb = tg.getVar(LOOT_HISTORY)
         local foundObject = tg.getObjectFromLootHistory(lootSource.id, lootHistoryDb)
+        local _linkOrName = itemLink or sName
         local _co = TG_COLOR_ORANGE
         local _cw = TG_C_WHITE
 
@@ -745,7 +749,7 @@ function tg.Button_OnLoad(self)
 
             table.remove(lootHistoryDb, lootSource.id)
             table.insert(lootHistoryDb, lootSource.id, foundObject)
-            TitanGathered2_PrintDebug(_co.."Updating ".. _cw..LOOT_HISTORY.._co..", item updated: "..itemLink)
+            TitanGathered2_PrintDebug(_co.."Updating ".. _cw..LOOT_HISTORY.._co..", item updated: ".._linkOrName)
         else
             foundObject = lootSource
             foundObject.count = 1
@@ -754,7 +758,7 @@ function tg.Button_OnLoad(self)
 
             table.insert(foundObject.loots, {name = sName, cnt = 1, sum = lootQuantity})
             table.insert(lootHistoryDb, lootSource.id, foundObject)
-            TitanGathered2_PrintDebug(_co.."Inserting ".. _cw..LOOT_HISTORY.._co..", item added: "..itemLink)
+            TitanGathered2_PrintDebug(_co.."Inserting ".. _cw..LOOT_HISTORY.._co..", item added: ".._linkOrName)
         end
         
         tg.setVar(LOOT_HISTORY, lootHistoryDb)
@@ -766,12 +770,13 @@ function tg.Button_OnLoad(self)
         local i,d
         local oItem	= {}
         local oSrc = {}
+        local _linkOrName = itemLink or item
         local fndSUM, fndBags, fndBank, fndCount, parentid, oldValue, newValue, found = 0,0,0,0,0,0,0,0,0
         local _co = TG_COLOR_ORANGE
         local _cw = TG_C_WHITE
 
-        for i,d in pairs(db) do
-            if(d.name == item)then
+        for i, d in pairs(db) do
+            if(d.name == tostring(item))then
                 oldValue = d.value
                 found = i
                 if (type(d.source) == "table") then
@@ -799,7 +804,7 @@ function tg.Button_OnLoad(self)
                 table.remove(db, found)
                 table.insert(db,found,oItem)
                 
-                TitanGathered2_PrintDebug(_co.."Updating ".._cw..ITEM_HISTORY.._co..", item updated: "..itemLink)
+                TitanGathered2_PrintDebug(_co.."Updating ".._cw..ITEM_HISTORY.._co..", item updated: ".._linkOrName)
                 TitanGathered2_PrintToLog(item, isOn)                
             end
         else
@@ -811,7 +816,7 @@ function tg.Button_OnLoad(self)
                 oItem = { name = item, value = iQuantity, source = oSrc }
                 table.insert(db,oItem)
 
-                TitanGathered2_PrintDebug(_co.."Inserting ".._cw..ITEM_HISTORY.._co..", tem added: "..itemLink)
+                TitanGathered2_PrintDebug(_co.."Inserting ".._cw..ITEM_HISTORY.._co..", tem added: ".._linkOrName)
                 TitanGathered2_PrintToLog(item, isOn)
             end
         end
@@ -827,15 +832,30 @@ function tg.Button_OnLoad(self)
     end
 
 
-    function tg.addItemsFromLootsToTooltip(self, targetName, lootHistory, itemHistory)
+    function tg.addItemsFromLootsToTooltip(self, targetName, lootHistory, itemHistory, categoryObject)
         local _loots = tg.updatePercentsToLootsHistory(targetName, lootHistory, itemHistory) or {};
+        local _operation = TG_DEFAULT_OPERATION
+
         for _, item in pairs(_loots) do
             if (item.name == targetName) then
-                lootInfo = printf("Gathered "..TG_C_VIOLET.."%d"..TG_C_BROWN.."x|r from: "..TG_C_YELLOW.."%s|r ("..TG_C_YELLOW.."%d"..TG_C_BROWN.."st|r %s)|r", item.cnt, item.source, item.sum, item.percents)
-                tg.addTooltipText(self, lootInfo, GameFontNormal);
+                if(type(categoryObject) == "table")then
+                    for _, prof in pairs(TG_PROFESSIONS_SPELL)do
+                        if(prof.id == categoryObject.profession)then
+                            _operation = prof.operation
+                        end
+                    end
+                end
+                -- TODO
+                
+                lootInfo = printf(_operation..TG_C_VIOLET.." %d"..TG_C_BROWN.."x|r from: "..TG_C_YELLOW.."%s|r ("..TG_C_YELLOW.."%d"..TG_C_BROWN.."st|r %s)|r", item.cnt, item.source, item.sum, item.percents)
+                tg.addTooltipText(self, lootInfo, GameFontNormalSmall);
             end
         end
 
+    end
+    -- TODO
+    function getSpelledProfession(profession)
+        
     end
 
     function getItemStackSizeInfo(itemName)
@@ -866,6 +886,7 @@ function tg.Button_OnLoad(self)
     end
 
     function tg.tooltipAddGatheringTriesFromSource(self, mstate)
+        dump(mstate)
         if(mstate == true)then
             self:AddLine("Not mined yet.")
         else
@@ -888,11 +909,11 @@ function tg.Button_OnLoad(self)
         TG_MINABLES = {}
         for _, plugin in pairs(tgPlugins)do
             if(type(plugin.getMinables) == "function")then
-                if(#plugin.getMinables())then
+                -- if(#plugin.getMinables())then
                     for _, minable in pairs(plugin.getMinables())do
                         table.insert(TG_MINABLES, minable)
                     end
-                end
+                -- end
             end
         end
         return TG_MINABLES
@@ -900,7 +921,7 @@ function tg.Button_OnLoad(self)
 
     function tg.findItemInCollection(itemName)
         local category, item = tg.GetItemCategory(itemName)
-        return item ~= nil, category
+        return (item ~= nil), category
     end
 
     function tg.CheckIfiSMinableObject(item, minablesDb)
@@ -978,9 +999,10 @@ function tg.Button_OnLoad(self)
         return nil
     end
 
-    function TitanGathered2_PrintDebug(text)
+    function TitanGathered2_PrintDebug(text, color)
+        local color = color or TG_C_WHITE
         if (not TitanGetVar(tg.id, "Debugmode")) then
-            DEFAULT_CHAT_FRAME:AddMessage(TG_C_YELLOW..tostring(text));
+            DEFAULT_CHAT_FRAME:AddMessage(color..tostring(text));
         end
     end
 
@@ -1169,13 +1191,20 @@ function tg.Button_OnLoad(self)
         return 0
     end
 
-    function echo(text, color)
-        local _color = color or TG_C_WHITE
-        print(_color..tostring(text).."|r")
+    --define print fn so we can easily turn it off 
+    function tgPrint(strName, tData) 
+        if ViragDevTool_AddData and not TitanGetVar(tg.id, "Debugmode") then 
+            ViragDevTool_AddData(tData, strName) 
+        end
     end
 
     function trim(s)
         return string.gsub(s, "%s", "");
+    end
+
+    function echo(text, color)
+        local _color = color or TG_C_WHITE
+        print(_color..tostring(text).."|r")
     end
 
     function dump(o)
