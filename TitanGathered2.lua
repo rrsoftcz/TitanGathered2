@@ -886,7 +886,6 @@ function tg.Button_OnLoad(self)
     end
 
     function tg.tooltipAddGatheringTriesFromSource(self, mstate)
-        dump(mstate)
         if(mstate == true)then
             self:AddLine("Not mined yet.")
         else
