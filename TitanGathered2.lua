@@ -873,6 +873,25 @@ function tg.Button_OnLoad(self)
         return printf(_str, _sum, _bgs, _bnk)
     end
 
+    function tg.getPlayersTarget()
+        local target = {}
+    
+        if UnitExists("target") then
+            local unitName = UnitName("target") or nil
+            local targtUID = UnitGUID("target") or nil
+            local trgtType = UnitCreatureType("target") or nil
+            local targetId = getIDformGUIDString(targtUID)
+    
+            if( trgtType )then
+                target.name = unitName
+                target.id = targetId
+                target.utype = trgtType
+                return target
+            end
+        else
+            return nil
+        end
+    end
 
     function tg._sort(_tObject, _key)
         if(type(_tObject) == "table")then
