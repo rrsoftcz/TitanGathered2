@@ -82,6 +82,7 @@ function tg.Button_OnLoad(self)
             ShowScales = 1,
             ShowHides = 1,
             ShowCloths = 1,
+            ShowTailoring = 1,
             ShowHerbs = 1,
             ShowEnchanting = 1,
             ShowMisc = 1,
@@ -404,23 +405,6 @@ function tg.Button_OnLoad(self)
 
         if (L_UIDROPDOWNMENU_MENU_LEVEL == 2) then
 
-            if (L_UIDROPDOWNMENU_MENU_VALUE == TG_LOCAL_SHARDS) then
-                if (TG_PLAYER_CLASS == "WARLOCK") then
-                    for i, e in pairs(TG_ITEMS) do
-                        TitanGathered2_PrintDebug("--------WARLOCK-------")
-                        if(e.cat == TG_LOCAL_SHARDS) then
-                            info = {};
-                            info.text = e.name;
-                            info.value = i;
-                            info.func = TitanGathered2_SetDisplay;
-                            info.checked = TitanGathered2Button_isdisp(i);
-                            info.keepShownOnClick = 1;
-                            L_UIDropDownMenu_AddButton(info, L_UIDROPDOWNMENU_MENU_LEVEL);
-                        end
-                    end
-                end
-            end
-            
             -- Tooltip
             if (L_UIDROPDOWNMENU_MENU_VALUE == TG_L_ENABLE_TOOLTIP) then
                 info = {};
@@ -548,15 +532,6 @@ function tg.Button_OnLoad(self)
         end
 
         TitanPanelRightClickMenu_AddSpacer();
-
-        if (TG_PLAYER_CLASS == "WARLOCK") then
-            -- Shards submenu
-            info = {};
-            info.text = TG_LOCAL_SHARDS;
-            info.value = TG_LOCAL_SHARDS;
-            info.hasArrow = 1;
-            L_UIDropDownMenu_AddButton(info);
-        end
 
         -- titan panel options
         info = {};
