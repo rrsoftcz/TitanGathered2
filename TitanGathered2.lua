@@ -704,7 +704,7 @@ function tg.Button_OnLoad(self)
                     
                     local itemId = getItemIdFromLink(sLink)
                     tg.PluginUpdateLootItemsDb(lootName, sLink, iParent, lootQuantity, index)
-                    tg.PluginUpdateHistory(lootName, lootQuantity, sLink, iParent)
+                    tg.PluginUpdateHistory(lootName, lootQuantity, sLink, iParent, category)
                 else
                     TitanGathered2_PrintDebug(printf(TG_COLOR_RED.."Item %s not found in loot history database.|r", lootName))
                 end
@@ -765,7 +765,7 @@ function tg.Button_OnLoad(self)
     end
 
 
-    function tg.PluginUpdateHistory(item, iQuantity, itemLink, oParent)
+    function tg.PluginUpdateHistory(item, iQuantity, itemLink, oParent, category)
         local db = tg.getVar(ITEM_HISTORY)
         local i,d
         local oItem	= {}
@@ -786,39 +786,31 @@ function tg.Button_OnLoad(self)
             end
         end
 
-        local fnd, category = tg.findItemInCollection(item)
-        local isOn = category == nil or TitanGetVar(tg.id, trim(category.smenu));
+        -- loging action only if a category is not nil and category is enabled...
+        local isOn = (category == nil) or TitanGetVar(tg.id, trim(category.smenu));
 
         if(found > 0) then
-
             newValue = oldValue + iQuantity
-
-            if (fnd == true) then
-                
-                
-                if (oParent.name ~= nil) then
-                    table.insert(oSrc, oParent.id, fndCount + 1)
-                end
-                
-                oItem = { name = item, value = newValue, source = oSrc }
-                table.remove(db, found)
-                table.insert(db,found,oItem)
-                
-                TitanGathered2_PrintDebug(_co.."Updating ".._cw..ITEM_HISTORY.._co..", item updated: ".._linkOrName)
-                TitanGathered2_PrintToLog(item, isOn)                
+            if (oParent.name ~= nil) then
+                table.insert(oSrc, oParent.id, fndCount + 1)
             end
+            
+            oItem = { name = item, value = newValue, source = oSrc }
+            table.remove(db, found)
+            table.insert(db,found,oItem)
+            
+            TitanGathered2_PrintDebug(_co.."Updating ".._cw..ITEM_HISTORY.._co..", item updated: ".._linkOrName)
+            TitanGathered2_PrintToLog(item, isOn)                
         else
-            if (fnd == true) then
-                if (oParent.name ~= nil) then
-                    table.insert(oSrc, oParent.id, 1)
-                end
-
-                oItem = { name = item, value = iQuantity, source = oSrc }
-                table.insert(db,oItem)
-
-                TitanGathered2_PrintDebug(_co.."Inserting ".._cw..ITEM_HISTORY.._co..", tem added: ".._linkOrName)
-                TitanGathered2_PrintToLog(item, isOn)
+            if (oParent.name ~= nil) then
+                table.insert(oSrc, oParent.id, 1)
             end
+
+            oItem = { name = item, value = iQuantity, source = oSrc }
+            table.insert(db,oItem)
+
+            TitanGathered2_PrintDebug(_co.."Inserting ".._cw..ITEM_HISTORY.._co..", tem added: ".._linkOrName)
+            TitanGathered2_PrintToLog(item, isOn)
         end
         tg.setVar(ITEM_HISTORY, db)
     end
@@ -927,11 +919,9 @@ function tg.Button_OnLoad(self)
         TG_MINABLES = {}
         for _, plugin in pairs(tgPlugins)do
             if(type(plugin.getMinables) == "function")then
-                -- if(#plugin.getMinables())then
-                    for _, minable in pairs(plugin.getMinables())do
-                        table.insert(TG_MINABLES, minable)
-                    end
-                -- end
+                for _, minable in pairs(plugin.getMinables())do
+                    table.insert(TG_MINABLES, minable)
+                end
             end
         end
         return TG_MINABLES
