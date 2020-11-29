@@ -657,7 +657,6 @@ function tg.Button_OnLoad(self)
 
     function tg.getObjectFromLootHistory(objectId, db)
         local _db = db or tg.getVar(LOOT_HISTORY)
-
         for i, objectNode in pairs(_db) do
             if(type(objectId) == "number")then
                 if(objectId == objectNode.id)then
@@ -943,6 +942,8 @@ function tg.Button_OnLoad(self)
     function tg.getLootParentSourceObject(index)
         local sgUID, _ = GetLootSourceInfo(index)
         local intID = getIDformGUIDString(sgUID)
+        echo("sgUID:"..sgUID)
+        echo("intID:"..intID)
         local found = { id = intID, name = nil }
 
         for _, plugin in pairs(tgPlugins)do
@@ -1254,7 +1255,8 @@ function tg.Button_OnLoad(self)
     end
 
     function tg.findForMultipleMinables(a, b)
-        for _a in pairs(b) do
+        echo("TG: Gatherable -> " .. a)
+        for _, _a in pairs(b) do
             if(_a == a)then
                 return true
             end
