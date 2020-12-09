@@ -5,6 +5,8 @@ LOOT_HISTORY = "lootsHistory"
 
 local p, TG_PLAYER_CLASS = UnitClass("player");
 
+local DDM = LibStub:GetLibrary("LibUIDropDownMenu-4.0");
+
 TitanGathered2 = {}
 tgPluginDb = {}
 tgPlugins = {}
@@ -17,7 +19,7 @@ local gtt = GameTooltip
 tg.id = "Gathered2";
 tg.addon = "TitanGathered2";
 tg.email = "bajtlamer@gmail.com";
-tg.www = "www.rrsoft.cz";
+tg.www = "www.titan-gathered.com";
 tg.boardCount = 5;
 tg.showZero = 0;
 tg.menuitem = "";
@@ -412,21 +414,21 @@ function tg.Button_OnLoad(self)
                 info.func = TitanGathered2Button_ToggleShowInfoTooltip;
                 info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, "ShowInfoTooltip"));
                 info.keepShownOnClick = 1;
-                L_UIDropDownMenu_AddButton(info, L_UIDROPDOWNMENU_MENU_LEVEL);
+                DDM:UIDropDownMenu_AddButton(info, _G["L_UIDROPDOWNMENU_MENU_LEVEL"]);
 
                 info = {};
                 info.text = TG_L_SHOW_STACKS_IN_TOOLTIP;
                 info.func = TitanGathered2Button_ToggleShowStacksInTooltip;
                 info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, "ShowStacksInTooltip"));
                 info.keepShownOnClick = 1;
-                L_UIDropDownMenu_AddButton(info, L_UIDROPDOWNMENU_MENU_LEVEL);
+                DDM:UIDropDownMenu_AddButton(info, _G["L_UIDROPDOWNMENU_MENU_LEVEL"]);
 
                 info = {};
                 info.text = TG_L_CHANGE_TOOLTIP_ANCHOR;
                 info.func = TitanGathered2Button_ToggleChangeTooltipAnchor;
                 info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, "ChangeTooltipAnchor"));
                 info.keepShownOnClick = 1;
-                L_UIDropDownMenu_AddButton(info, L_UIDROPDOWNMENU_MENU_LEVEL);
+                DDM:UIDropDownMenu_AddButton(info, _G["L_UIDROPDOWNMENU_MENU_LEVEL"]);
             end
             -- Bank
             if (L_UIDROPDOWNMENU_MENU_VALUE == TG_LOCAL_BANK_ITEMS) then
@@ -435,14 +437,14 @@ function tg.Button_OnLoad(self)
                 info.func = TitanGathered2Button_ToggleShowBankItems;
                 info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, "ShowBankItems"));
                 info.keepShownOnClick = 1;
-                L_UIDropDownMenu_AddButton(info, L_UIDROPDOWNMENU_MENU_LEVEL);
+                DDM:UIDropDownMenu_AddButton(info, _G["L_UIDROPDOWNMENU_MENU_LEVEL"]);
 
                 info = {};
                 info.text = TG_LOCAL_EXCLUDE_ZERO;
                 info.func = TitanGathered2Button_ToggleEcludeZero;
                 info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, "ExcludeZero"));
                 info.keepShownOnClick = 1;
-                L_UIDropDownMenu_AddButton(info, L_UIDROPDOWNMENU_MENU_LEVEL);
+                DDM:UIDropDownMenu_AddButton(info, _G["L_UIDROPDOWNMENU_MENU_LEVEL"]);
             end
             -- About
             if (L_UIDROPDOWNMENU_MENU_VALUE == "DisplayAbout") then
@@ -451,7 +453,7 @@ function tg.Button_OnLoad(self)
                 info.value = "AboutTextPopUP";
                 info.notClickable = 1;
                 info.isTitle = 0;
-                L_UIDropDownMenu_AddButton(info, L_UIDROPDOWNMENU_MENU_LEVEL);
+                DDM:UIDropDownMenu_AddButton(info, _G["L_UIDROPDOWNMENU_MENU_LEVEL"]);
             end
 
             return;
@@ -465,7 +467,8 @@ function tg.Button_OnLoad(self)
         info.func = TitanGathered2Button_ToggleShowSkills;
         info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, "ShowSkills"));
         info.keepShownOnClick = 1;
-        L_UIDropDownMenu_AddButton(info);
+        -- DDM:UIDropDownMenu_AddButton(info);
+        DDM:UIDropDownMenu_AddButton(info);
 
         -- Show Secondary Skills
         info = {};
@@ -473,7 +476,7 @@ function tg.Button_OnLoad(self)
         info.func = TitanGathered2Button_ToggleShowSecSkills;
         info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, "ShowSecSkills"));
         info.keepShownOnClick = 1;
-        L_UIDropDownMenu_AddButton(info);
+        DDM:UIDropDownMenu_AddButton(info);
 
         -- Hidde zero option
         info = {};
@@ -481,7 +484,7 @@ function tg.Button_OnLoad(self)
         info.func = TitanGathered2Button_ToggleShowZerro;
         info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, "ShowZerro"));
         info.keepShownOnClick = 1;
-        L_UIDropDownMenu_AddButton(info);
+        DDM:UIDropDownMenu_AddButton(info);
 
         -- Debug mode
         info = {};
@@ -489,7 +492,7 @@ function tg.Button_OnLoad(self)
         info.func = TitanGathered2Button_ToggleDebugmode;
         info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, "Debugmode"));
         info.keepShownOnClick = 1;
-        L_UIDropDownMenu_AddButton(info);
+        DDM:UIDropDownMenu_AddButton(info);
 
         TitanPanelRightClickMenu_AddSpacer();
 
@@ -499,7 +502,7 @@ function tg.Button_OnLoad(self)
         info.value = TG_L_ENABLE_TOOLTIP;
         info.hasArrow = 1;
         info.notCheckable = true
-        L_UIDropDownMenu_AddButton(info);
+        DDM:UIDropDownMenu_AddButton(info);
 
         -- bank items
         info = {};
@@ -507,7 +510,7 @@ function tg.Button_OnLoad(self)
         info.value = TG_LOCAL_BANK_ITEMS;
         info.hasArrow = 1;
         info.notCheckable = true
-        L_UIDropDownMenu_AddButton(info);
+        DDM:UIDropDownMenu_AddButton(info);
 
         TitanPanelRightClickMenu_AddSpacer();
 
@@ -515,7 +518,7 @@ function tg.Button_OnLoad(self)
         info = {};
         info.text = TG_LOCAL_SHOW_CATEGORIES;
         info.isTitle = 1;
-        L_UIDropDownMenu_AddButton(info);
+        DDM:UIDropDownMenu_AddButton(info);
 
         -- Loop all categories and insert each to option menu
         for i, category in pairs(TG_CATEGORIES) do
@@ -527,7 +530,7 @@ function tg.Button_OnLoad(self)
                 info.func = ToggleTitanGatherdMenuItem
                 info.checked = TitanUtils_Toggle(TitanGetVar(tg.id, varname))
                 info.keepShownOnClick = 0
-                L_UIDropDownMenu_AddButton(info)
+                DDM:UIDropDownMenu_AddButton(info);
             end
         end
 
@@ -537,7 +540,7 @@ function tg.Button_OnLoad(self)
         info = {};
         info.text = TG_LOCAL_SHOW_TITAN_OPT;
         info.isTitle = 1;
-        L_UIDropDownMenu_AddButton(info);
+        DDM:UIDropDownMenu_AddButton(info);
 
         TitanPanelRightClickMenu_AddToggleIcon(tg.id);
         TitanPanelRightClickMenu_AddToggleLabelText(tg.id);
@@ -549,7 +552,7 @@ function tg.Button_OnLoad(self)
         info.value = "DisplayAbout";
         info.hasArrow = 1;
         info.notCheckable = true
-        L_UIDropDownMenu_AddButton(info);
+        DDM:UIDropDownMenu_AddButton(info);
 
     end
 
